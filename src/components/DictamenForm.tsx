@@ -1,22 +1,49 @@
 import React, { useState } from 'react';
-import { Save, X, RefreshCw, FileText, CheckCircle, ShieldAlert } from 'lucide-react';
+import { Save, X, RefreshCw, FileText, CheckCircle, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { SolicitudModel, TipoSolicitud } from '../types';
 
 interface DictamenFormProps {
   onCancel: () => void;
   onSave: (data: SolicitudModel) => void;
   initialData?: SolicitudModel | null;
+  errorMessage?: string;
 }
 
-export default function DictamenForm({ onCancel, onSave, initialData }: DictamenFormProps) {
+export default function DictamenForm({ onCancel, onSave, initialData, errorMessage }: DictamenFormProps) {
   const [formData, setFormData] = useState<Partial<SolicitudModel>>(
     initialData ? { ...initialData } : {
       tipoSolicitud: '',
-      estatusGeneral: 'Recibido',
+      estatusGeneral: 'En Opinión Técnica de Subdirección de Fianzas y Seguros',
       excepcionDGRMOM: false,
       excepcionDictaminacion: false,
     }
   );
+
+  const [isCapitulosOpen, setIsCapitulosOpen] = useState(false);
+
+  const CATALOGO_CAPITULOS = [
+    { id: '1000', label: '1000 - Servicios Personales' },
+    { id: '2000', label: '2000 - Materiales y Suministros' },
+    { id: '3000', label: '3000 - Servicios Generales' },
+    { id: '4000', label: '4000 - Transferencias, Asignaciones, Subsidios y Otras Ayudas' },
+    { id: '5000', label: '5000 - Bienes Muebles, Inmuebles e Intangibles' },
+    { id: '6000', label: '6000 - Inversión Pública' },
+  ];
+
+  const handleCapituloChange = (capLabel: string) => {
+    const currentVal = formData.capitulo || '';
+    // Cambiamos a punto y coma (;) como separador para evitar conflictos con comas en el texto
+    const selected = currentVal.split('; ').filter(c => c.trim() !== '');
+    
+    let newSelected: string[];
+    if (selected.includes(capLabel)) {
+      newSelected = selected.filter(c => c !== capLabel);
+    } else {
+      newSelected = [...selected, capLabel].sort();
+    }
+    
+    setFormData(prev => ({ ...prev, capitulo: newSelected.join('; ') }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -30,6 +57,17 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
       ...prev,
       [name]: finalValue,
     }));
+  };
+
+  const getStatusColorCls = (status?: string) => {
+    switch(status) {
+      case 'En Opinión Técnica de Subdirección de Fianzas y Seguros': return 'bg-blue-500 shadow-blue-500/50';
+      case 'En proceso de elaboración': return 'bg-amber-500 shadow-amber-500/50';
+      case 'En Firma de Dirección General': return 'bg-purple-500 shadow-purple-500/50';
+      case 'En autorización de la OM': return 'bg-emerald-500 shadow-emerald-500/50';
+      case 'Concluido Entregado a dependencia solicitante': return 'bg-gray-500 shadow-gray-500/50';
+      default: return 'bg-blue-500 shadow-blue-500/50';
+    }
   };
 
   const handleClear = () => {
@@ -72,23 +110,23 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white/80 backdrop-blur-xl border border-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] p-10 relative overflow-hidden">
+      <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white dark:border-slate-700 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] p-10 relative overflow-hidden">
         {/* Subtle decorative elements for high-end feel */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-gem-primary via-gem-secondary to-gem-primary opacity-90"></div>
+        <div className="absolute top-0 left-0 w-full h-2 bg-linear-to-r from-gem-primary via-gem-secondary to-gem-primary opacity-90"></div>
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-gem-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gem-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 space-y-12">
           {/* SECTION 1: DATOS GENERALES */}
           <section>
-            <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold font-mono">1</div>
-              <h3 className="text-xl font-semibold text-gray-800">Datos Generales</h3>
+            <div className="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-slate-700 pb-3">
+              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold font-mono">1</div>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-slate-100">Datos Generales</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Tipo de Solicitud *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Tipo de Solicitud *</label>
                 <select 
                   name="tipoSolicitud" 
                   value={formData.tipoSolicitud || ''} 
@@ -106,7 +144,7 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Número de Oficio de Solicitud *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Número de Oficio de Solicitud *</label>
                 <input 
                   type="text" 
                   name="numeroOficioSolicitud"
@@ -119,7 +157,7 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Dependencia / OPD *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Dependencia / OPD *</label>
                 <select 
                   name="dependenciaOPD" 
                   value={formData.dependenciaOPD || ''} 
@@ -128,18 +166,51 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
                   className="w-full bg-white/50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary block p-3 transition-colors shadow-sm"
                 >
                   <option value="">Seleccione...</option>
-                  <option value="Secretaría de Finanzas">Secretaría de Finanzas</option>
-                  <option value="Secretaría de Educación">Secretaría de Educación</option>
-                  <option value="Secretaría de Salud">Secretaría de Salud</option>
-                  <option value="Secretaría de Seguridad">Secretaría de Seguridad</option>
-                  <option value="Oficialía Mayor">Oficialía Mayor</option>
-                  <option value="OPD DIFEM">OPD DIFEM</option>
-                  <option value="Otra">Otra</option>
+                 <option value="Poder Legislativo">Poder Legislativo</option>
+<option value="Unidad de Información">Unidad de Información</option>
+<option value="Gubernatura">Gubernatura</option>
+<option value="Coordinación General de Comunicación Social">Coordinación General de Comunicación Social</option>
+<option value="Secretaría General de Gobierno">Secretaría General de Gobierno</option>
+<option value="Secretaría de Seguridad">Secretaría de Seguridad</option>
+<option value="Secretaría de Finanzas">Secretaría de Finanzas</option>
+<option value="Secretaría de Salud">Secretaría de Salud</option>
+<option value="Secretaría del Trabajo">Secretaría del Trabajo</option>
+<option value="Secretaría de Desarrollo Económico">Secretaría de Desarrollo Económico</option>
+<option value="Secretaría de la Contraloría">Secretaría de la Contraloría</option>
+<option value="Secretaría de Movilidad">Secretaría de Movilidad</option>
+<option value="Secretaría del Campo">Secretaría del Campo</option>
+<option value="Secretaría de Cultura y Turismo">Secretaría de Cultura y Turismo</option>
+<option value="Secretaría de las Mujeres">Secretaría de las Mujeres</option>
+<option value="Secretaría de Educación, Ciencia, Tecnología e Innovación">Secretaría de Educación, Ciencia, Tecnología e Innovación</option>
+<option value="Secretaría de Bienestar">Secretaría de Bienestar</option>
+<option value="Secretaría de Desarrollo Urbano e Infraestructura">Secretaría de Desarrollo Urbano e Infraestructura</option>
+<option value="Secretaría del Medio Ambiente y Desarrollo Sostenible">Secretaría del Medio Ambiente y Desarrollo Sostenible</option>
+<option value="Secretaría del Agua">Secretaría del Agua</option>
+<option value="Consejería Jurídica">Consejería Jurídica</option>
+<option value="Oficialía Mayor">Oficialía Mayor</option>
+<option value="Jefatura de Gabinete y Proyectos Especiales">Jefatura de Gabinete y Proyectos Especiales</option>
+<option value="Vocería de la Gubernatura">Vocería de la Gubernatura</option>
+<option value="Coordinación Técnica">Coordinación Técnica</option>
+<option value="Agencia Digital del Estado de México">Agencia Digital del Estado de México</option>
+<option value="Poder Judicial">Poder Judicial</option>
+<option value="Instituto Electoral del Estado de México">Instituto Electoral del Estado de México</option>
+<option value="Comisión de Derechos Humanos del Estado de México">Comisión de Derechos Humanos del Estado de México</option>
+<option value="Tribunal de Justicia Administrativa">Tribunal de Justicia Administrativa</option>
+<option value="Junta Local de Conciliación y Arbitraje Valle de Toluca">Junta Local de Conciliación y Arbitraje Valle de Toluca</option>
+<option value="Tribunal Estatal de Conciliación y Arbitraje">Tribunal Estatal de Conciliación y Arbitraje</option>
+<option value="Universidad Autónoma del Estado de México">Universidad Autónoma del Estado de México</option>
+<option value="Junta Local de Conciliación y Arbitraje del Valle Cuautitlán-Texcoco">Junta Local de Conciliación y Arbitraje del Valle Cuautitlán-Texcoco</option>
+<option value="Tribunal Electoral del Estado de México">Tribunal Electoral del Estado de México</option>
+<option value="Instituto de Transparencia, Acceso a la Información Pública y Protección de Datos Personales">Instituto de Transparencia, Acceso a la Información Pública y Protección de Datos Personales</option>
+<option value="Fiscalía General de Justicia">Fiscalía General de Justicia</option>
+<option value="Secretaría Ejecutiva del Sistema Estatal Anticorrupción">Secretaría Ejecutiva del Sistema Estatal Anticorrupción</option>
+<option value="Otros">Otros</option>
+
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Unidad Administrativa *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Unidad Administrativa *</label>
                 <input 
                   type="text" 
                   name="unidadAdministrativa"
@@ -151,7 +222,7 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1 relative">
-                <label className="block text-sm font-semibold text-gray-700">Fecha de recepción en DGRM / OM</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Fecha de recepción en DGRM / OM</label>
                 <div className="flex gap-4 items-center mt-1">
                   <input 
                     type="date" 
@@ -174,7 +245,7 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1 relative">
-                <label className="block text-sm font-semibold text-gray-700">Fecha recepción Coord. Jurídica</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Fecha recepción Coord. Jurídica</label>
                 <div className="flex gap-4 items-center mt-1">
                   <input 
                     type="date" 
@@ -196,26 +267,59 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Capítulo Presupuestal</label>
-                <select 
-                  name="capitulo"
-                  value={formData.capitulo || ''}
-                  onChange={handleChange}
-                  className="w-full bg-white/50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary block p-3 transition-colors shadow-sm"
-                >
-                  <option value="">Seleccione...</option>
-                  <option value="1000">1000 - Servicios Personales</option>
-                  <option value="2000">2000 - Materiales y Suministros</option>
-                  <option value="3000">3000 - Servicios Generales</option>
-                  <option value="4000">4000 - Transferencias, Asignaciones, Subsidios</option>
-                  <option value="5000">5000 - Bienes Muebles, Inmuebles e Intangibles</option>
-                  <option value="6000">6000 - Inversión Pública</option>
-                </select>
+              <div className="space-y-1 relative">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Capítulo(s) Presupuestal(es)</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCapitulosOpen(!isCapitulosOpen)}
+                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-sm rounded-xl focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary flex items-center justify-between p-3 transition-all shadow-sm"
+                  >
+                    <span className="truncate text-xs font-medium">
+                      {(formData.capitulo || '').split('; ').filter(Boolean).length > 0 
+                        ? `${(formData.capitulo || '').split('; ').filter(Boolean).length} seleccionados` 
+                        : 'Seleccione capítulos...'}
+                    </span>
+                    {isCapitulosOpen ? <ChevronUp className="w-4 h-4 text-gem-primary" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </button>
+
+                  {isCapitulosOpen && (
+                    <div className="absolute z-50 top-full left-0 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl p-3 space-y-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 custom-scrollbar">
+                      {CATALOGO_CAPITULOS.map((cap) => {
+                        const isChecked = (formData.capitulo || '').split('; ').includes(cap.label);
+                        return (
+                          <label 
+                            key={cap.id} 
+                            className={`flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer group ${
+                              isChecked 
+                                ? 'bg-gem-primary/10 text-gem-primary-dark dark:text-gem-primary-light' 
+                                : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'
+                            }`}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked}
+                              onChange={() => handleCapituloChange(cap.label)}
+                              className="rounded border-gray-300 text-gem-primary focus:ring-gem-primary dark:bg-slate-900 dark:border-slate-600"
+                            />
+                            <span className="text-[11px] font-medium leading-tight">
+                              {cap.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                {formData.capitulo && (
+                  <p className="text-[10px] text-gray-400 mt-1 truncate px-1">
+                    {formData.capitulo}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Partida Presupuestal *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Partida Presupuestal *</label>
                 <input 
                   type="text" 
                   name="partidaPresupuestal"
@@ -228,7 +332,7 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Monto de la Solicitud *</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Monto de la Solicitud *</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-gray-500 font-medium">$</span>
@@ -247,19 +351,22 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-semibold text-gray-700">Estatus General</label>
-                <select 
-                  name="estatusGeneral" 
-                  value={formData.estatusGeneral || 'Recibido'} 
-                  onChange={handleChange}
-                  className="w-full bg-white/50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary block p-3 transition-colors shadow-sm"
-                >
-                  <option value="Recibido">Recibido</option>
-                  <option value="En Revisión">En Revisión</option>
-                  <option value="Aprobado">Aprobado</option>
-                  <option value="Rechazado">Rechazado</option>
-                  <option value="Cancelado">Cancelado</option>
-                </select>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Estatus General</label>
+                <div className="relative flex items-center">
+                  <div className={`absolute left-3 w-3 h-3 rounded-full shadow-md transition-colors duration-300 ${getStatusColorCls(formData.estatusGeneral || 'En Opinión Técnica de Subdirección de Fianzas y Seguros')}`}></div>
+                  <select 
+                    name="estatusGeneral" 
+                    value={formData.estatusGeneral || 'En Opinión Técnica de Subdirección de Fianzas y Seguros'} 
+                    onChange={handleChange}
+                    className="w-full bg-white/50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary block p-3 pl-9 transition-colors shadow-sm"
+                  >
+                    <option value="En Opinión Técnica de Subdirección de Fianzas y Seguros">En Opinión Técnica de Subdirección de Fianzas y Seguros</option>
+                    <option value="En proceso de elaboración">En proceso de elaboración</option>
+                    <option value="En Firma de Dirección General">En Firma de Dirección General</option>
+                    <option value="En autorización de la OM">En autorización de la OM</option>
+                    <option value="Concluido Entregado a dependencia solicitante">Concluido Entregado a dependencia solicitante</option>
+                  </select>
+                </div>
               </div>
             </div>
           </section>
@@ -505,9 +612,20 @@ export default function DictamenForm({ onCancel, onSave, initialData }: Dictamen
           )}
 
 
+          {/* ERROR DEL SERVIDOR */}
+          {errorMessage && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium flex items-start gap-3 animate-in slide-in-from-top-2">
+              <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold mb-1">Error al guardar la solicitud</p>
+                <pre className="whitespace-pre-wrap text-xs">{errorMessage}</pre>
+              </div>
+            </div>
+          )}
+
           {/* ACTIONS */}
-          <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-             <div className="text-sm text-gray-500 flex items-center gap-2">
+          <div className="pt-8 border-t border-gray-100 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-6">
+             <div className="text-sm text-gray-500 dark:text-slate-400 flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-gem-primary-light" />
                 Verifique los datos antes de guardar. Toda operación queda registrada.
              </div>

@@ -3,6 +3,7 @@ import Sidebar, { ViewType } from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import DictamenList from './components/DictamenList';
 import DictamenForm from './components/DictamenForm';
+import DictamenDetalle from './components/DictamenDetalle';
 import Configuracion from './components/Configuracion';
 import Auditoria from './components/Auditoria';
 import Login from './components/Login';
@@ -13,11 +14,13 @@ import { login as authLogin, logout as authLogout, getUser, isAuthenticated, aut
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [editingData, setEditingData] = useState<SolicitudModel | null>(null);
+  const [detailData, setDetailData] = useState<SolicitudModel | null>(null);
   const [data, setData] = useState<SolicitudModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getUser());
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   // Estados para notificaciones
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -112,39 +115,52 @@ export default function App() {
 
   const handleCreate = () => {
     setEditingData(null);
+    setSaveError('');
     setCurrentView('dictamenes-form');
   };
 
   const handleEdit = (solicitud: SolicitudModel) => {
     setEditingData(solicitud);
+    setSaveError('');
     setCurrentView('dictamenes-form');
   };
 
   const handleSave = async (solicitud: SolicitudModel) => {
+    setSaveError('');
     try {
+      let res: Response;
       if (solicitud.folioInterno) {
-        const res = await authFetch(`${API_BASE}/api/solicitudes/${solicitud.folioInterno}`, {
+        res = await authFetch(`${API_BASE}/api/solicitudes/${solicitud.folioInterno}`, {
           method: 'PUT',
           body: JSON.stringify(solicitud)
         });
-        if (res.ok) {
-          const updated = await res.json();
-          setData(data.map(d => d.folioInterno === updated.folioInterno ? updated : d));
-        }
       } else {
-        const res = await authFetch(`${API_BASE}/api/solicitudes`, {
+        res = await authFetch(`${API_BASE}/api/solicitudes`, {
           method: 'POST',
           body: JSON.stringify(solicitud)
         });
-        if (res.ok) {
-          const created = await res.json();
-          setData([created, ...data]);
+      }
+
+      if (res.ok) {
+        const saved = await res.json();
+        if (solicitud.folioInterno) {
+          setData(data.map(d => d.folioInterno === saved.folioInterno ? saved : d));
+        } else {
+          setData([saved, ...data]);
         }
+        setCurrentView('dictamenes-list');
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Error desconocido del servidor' }));
+        const message = err.details
+          ? err.details.join('\n')
+          : err.error || err.message || 'Error al guardar la solicitud';
+        setSaveError(message);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }
     } catch (error) {
       console.error('Error saving data:', error);
+      setSaveError('Error de conexión al intentar guardar.');
     }
-    setCurrentView('dictamenes-list');
   };
 
   const handleDelete = async (folioInterno: number) => {
@@ -201,7 +217,7 @@ export default function App() {
                <div className="relative">
                  <button 
                    onClick={() => setShowNotifications(!showNotifications)}
-                   className={`p-2 rounded-full transition-colors relative ${showNotifications ? 'bg-gem-primary/10 text-gem-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+                   className={`p-2 rounded-full transition-colors relative ${showNotifications ? 'bg-gem-primary/10 text-gem-primary' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
                  >
                    <Bell className="w-5 h-5" />
                    {unreadCount > 0 && (
@@ -211,9 +227,9 @@ export default function App() {
 
                  {/* Dropdown Notificaciones */}
                  {showNotifications && (
-                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
-                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-                       <h3 className="font-bold text-gray-800">Notificaciones</h3>
+                   <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+                       <h3 className="font-bold text-gray-800 dark:text-slate-100">Notificaciones</h3>
                        {unreadCount > 0 && (
                          <button onClick={markAllAsRead} className="text-xs font-semibold text-gem-primary hover:text-gem-primary-dark">
                            Marcar leídas
@@ -228,10 +244,10 @@ export default function App() {
                        ) : (
                          <div className="divide-y divide-gray-50">
                            {notifications.map(notif => (
-                             <div key={notif.id} className="p-4 hover:bg-gray-50 transition-colors flex gap-3">
-                               <div className="w-2 h-2 mt-1.5 rounded-full bg-gem-primary flex-shrink-0"></div>
+                             <div key={notif.id} className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex gap-3">
+                               <div className="w-2 h-2 mt-1.5 rounded-full bg-gem-primary shrink-0"></div>
                                <div>
-                                 <p className="text-sm text-gray-800 font-medium leading-snug">{notif.mensaje}</p>
+                                 <p className="text-sm text-gray-800 dark:text-slate-200 font-medium leading-snug">{notif.mensaje}</p>
                                  <p className="text-xs text-gray-400 mt-1">
                                    {new Date(notif.fecha).toLocaleString()}
                                  </p>
@@ -277,6 +293,7 @@ export default function App() {
                   data={data} 
                   onCreate={handleCreate} 
                   onEdit={handleEdit}
+                  onViewDetail={(solicitud) => { setDetailData(solicitud); setCurrentView('dictamenes-detail'); }}
                   onDelete={handleDelete}
                   userRole={userRole}
                 />
@@ -284,9 +301,19 @@ export default function App() {
 
               {currentView === 'dictamenes-form' && (
                 <DictamenForm 
-                  onCancel={() => setCurrentView('dictamenes-list')}
+                  onCancel={() => { setSaveError(''); setCurrentView('dictamenes-list'); }}
                   onSave={handleSave}
                   initialData={editingData}
+                  errorMessage={saveError}
+                />
+              )}
+
+              {currentView === 'dictamenes-detail' && detailData && (
+                <DictamenDetalle
+                  solicitud={detailData}
+                  onBack={() => setCurrentView('dictamenes-list')}
+                  onEdit={(solicitud) => { setDetailData(null); handleEdit(solicitud); }}
+                  userRole={userRole}
                 />
               )}
 

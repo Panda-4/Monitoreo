@@ -7,10 +7,11 @@ export type TipoSolicitud =
   | "";
 
 export type EstatusDictamen = 
-  | "Recibido"
-  | "En Revisión Técnica"
-  | "Autorizado por OM"
-  | "Concluido";
+  | "En Opinión Técnica de Subdirección de Fianzas y Seguros"
+  | "En proceso de elaboración"
+  | "En Firma de Dirección General"
+  | "En autorización de la OM"
+  | "Concluido Entregado a dependencia solicitante";
 
 export interface SolicitudModel {
   folioInterno?: number;

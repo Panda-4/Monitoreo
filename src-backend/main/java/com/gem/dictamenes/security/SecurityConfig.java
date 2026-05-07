@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.gem.dictamenes.repository.UsuarioRepository;
+import com.gem.dictamenes.model.Usuario;
 
 import java.util.List;
 
@@ -73,8 +74,14 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("Usuario no encontrado: " + username));
+        return username -> {
+            Usuario usuario = usuarioRepository.findByUsername(username)
+                    .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("Usuario no encontrado: " + username));
+            if (!Boolean.TRUE.equals(usuario.getActivo())) {
+                throw new org.springframework.security.authentication.DisabledException("La cuenta del usuario está desactivada");
+            }
+            return usuario;
+        };
     }
 
     @Bean

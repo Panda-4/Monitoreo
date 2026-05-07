@@ -128,8 +128,8 @@ export default function Configuracion() {
   return (
     <div className="w-full max-w-5xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 tracking-tight">Configuración del Sistema</h2>
-        <p className="text-gray-500 mt-2 font-medium">Administración de usuarios, catálogos y preferencias.</p>
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100 tracking-tight">Configuración del Sistema</h2>
+        <p className="text-gray-500 dark:text-slate-400 mt-2 font-medium">Administración de usuarios, catálogos y preferencias.</p>
       </div>
 
       {/* Success Toast */}
@@ -154,8 +154,8 @@ export default function Configuracion() {
                onClick={() => setActiveTab(tab.id)}
                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
                  activeTab === tab.id 
-                 ? 'bg-gem-primary/10 text-gem-primary border border-gem-primary/20 shadow-sm' 
-                 : 'text-gray-600 hover:bg-gray-50 border border-transparent'
+                 ? 'bg-gem-primary/10 text-gem-primary border border-gem-primary/20 shadow-sm dark:bg-gem-primary/20' 
+                 : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 border border-transparent'
                }`}
              >
                <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-gem-primary' : 'text-gray-400'}`} />
@@ -165,13 +165,13 @@ export default function Configuracion() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-sm p-8 min-h-[500px]">
+        <div className="flex-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-gray-200 dark:border-slate-700 rounded-2xl shadow-sm p-8 min-h-[500px]">
           
           {/* ===== TAB: USUARIOS ===== */}
           {activeTab === 'usuarios' && (
             <div className="space-y-6 animate-in fade-in">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-4">
-                <h3 className="text-xl font-bold text-gray-800">Usuarios del Sistema</h3>
+              <div className="flex justify-between items-center border-b border-gray-100 dark:border-slate-700 pb-4">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Usuarios del Sistema</h3>
                 <button
                   onClick={openCreate}
                   className="flex items-center gap-2 px-4 py-2 bg-gem-primary text-white rounded-lg text-sm font-semibold hover:bg-gem-primary-dark transition-colors shadow-md"
@@ -185,9 +185,9 @@ export default function Configuracion() {
                   <div className="w-8 h-8 border-4 border-gem-primary/20 border-t-gem-primary rounded-full animate-spin"></div>
                 </div>
               ) : (
-                <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                      <thead className="bg-gray-50 dark:bg-slate-900 text-gray-600 dark:text-slate-400 font-medium border-b border-gray-200 dark:border-slate-700">
                          <tr>
                             <th className="p-4">Nombre</th>
                             <th className="p-4">Usuario</th>
@@ -197,12 +197,12 @@ export default function Configuracion() {
                             <th className="p-4 text-right">Acciones</th>
                          </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                          {usuarios.map(user => (
-                           <tr key={user.id} className="hover:bg-gray-50/50 transition-colors group">
-                             <td className="p-4 font-semibold text-gray-800">{user.nombreCompleto}</td>
-                             <td className="p-4 text-gray-600 font-mono text-xs">{user.username}</td>
-                             <td className="p-4 text-gray-600">{user.dependencia || '—'}</td>
+                           <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-700/50 transition-colors group">
+                             <td className="p-4 font-semibold text-gray-800 dark:text-slate-100">{user.nombreCompleto}</td>
+                             <td className="p-4 text-gray-600 dark:text-slate-400 font-mono text-xs">{user.username}</td>
+                             <td className="p-4 text-gray-600 dark:text-slate-400">{user.dependencia || '—'}</td>
                              <td className="p-4">{rolLabel(user.rol)}</td>
                              <td className="p-4 text-center">
                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${user.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -211,11 +211,11 @@ export default function Configuracion() {
                              </td>
                              <td className="p-4 text-right">
                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                 <button onClick={() => openEdit(user)} className="p-2 text-gray-500 hover:text-gem-primary hover:bg-gem-primary/10 rounded-lg transition-colors" title="Editar">
+                                 <button onClick={() => openEdit(user)} className="p-2 text-gray-500 dark:text-slate-400 hover:text-gem-primary hover:bg-gem-primary/10 rounded-lg transition-colors" title="Editar">
                                    <Edit2 className="w-4 h-4" />
                                  </button>
                                  {user.activo && (
-                                   <button onClick={() => user.id && handleDeactivate(user.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Desactivar">
+                                   <button onClick={() => user.id && handleDeactivate(user.id)} className="p-2 text-gray-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Desactivar">
                                      <UserX className="w-4 h-4" />
                                    </button>
                                  )}
@@ -225,7 +225,7 @@ export default function Configuracion() {
                          ))}
                          {usuarios.length === 0 && (
                            <tr>
-                             <td colSpan={6} className="p-12 text-center text-gray-400 font-medium">No hay usuarios registrados.</td>
+                             <td colSpan={6} className="p-12 text-center text-gray-400 dark:text-slate-500 font-medium">No hay usuarios registrados.</td>
                            </tr>
                          )}
                       </tbody>
@@ -238,16 +238,16 @@ export default function Configuracion() {
           {/* ===== TAB: CATALOGOS ===== */}
           {activeTab === 'catalogos' && (
             <div className="space-y-6 animate-in fade-in">
-              <div className="border-b border-gray-100 pb-4">
-                <h3 className="text-xl font-bold text-gray-800">Catálogos Maestros</h3>
-                <p className="text-sm text-gray-500 mt-1">Administración de listas desplegables y opciones fijas del sistema.</p>
+              <div className="border-b border-gray-100 dark:border-slate-700 pb-4">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Catálogos Maestros</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Administración de listas desplegables y opciones fijas del sistema.</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {['Dependencias y OPDs', 'Capítulos Presupuestales', 'Unidades Administrativas', 'Tipos de Excepción'].map((cat, i) => (
-                    <div key={i} className="p-4 border border-gray-200 rounded-xl hover:border-gem-primary/50 cursor-pointer transition-colors bg-gray-50 hover:bg-white flex justify-between items-center">
-                       <span className="font-semibold text-gray-700">{cat}</span>
-                       <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-bold">Gestionar</span>
+                    <div key={i} className="p-4 border border-gray-200 dark:border-slate-700 rounded-xl hover:border-gem-primary/50 cursor-pointer transition-colors bg-gray-50 dark:bg-slate-900 hover:bg-white dark:hover:bg-slate-700 flex justify-between items-center">
+                       <span className="font-semibold text-gray-700 dark:text-slate-200">{cat}</span>
+                       <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 px-2 py-1 rounded-full font-bold">Gestionar</span>
                     </div>
                  ))}
               </div>
@@ -257,18 +257,18 @@ export default function Configuracion() {
           {/* ===== TAB: SEGURIDAD ===== */}
           {activeTab === 'seguridad' && (
             <div className="space-y-6 animate-in fade-in">
-              <div className="border-b border-gray-100 pb-4">
-                <h3 className="text-xl font-bold text-gray-800">Roles y Permisos</h3>
-                <p className="text-sm text-gray-500 mt-1">Referencia de los roles disponibles en el sistema.</p>
+              <div className="border-b border-gray-100 dark:border-slate-700 pb-4">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Roles y Permisos</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Referencia de los roles disponibles en el sistema.</p>
               </div>
 
               <div className="space-y-4">
                 {[
-                  { rol: 'ADMINISTRADOR', color: 'border-purple-200 bg-purple-50/50', badge: 'bg-purple-100 text-purple-800',
+                  { rol: 'ADMINISTRADOR', color: 'border-purple-200 bg-purple-50/50 dark:border-purple-900/30 dark:bg-purple-900/10', badge: 'bg-purple-100 text-purple-800',
                     permisos: ['CRUD completo de solicitudes', 'Eliminar solicitudes', 'Gestión de usuarios', 'Ver auditoría', 'Acceso a configuración'] },
-                  { rol: 'AUTORIZADOR', color: 'border-blue-200 bg-blue-50/50', badge: 'bg-blue-100 text-blue-800',
+                  { rol: 'AUTORIZADOR', color: 'border-blue-200 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-900/10', badge: 'bg-blue-100 text-blue-800',
                     permisos: ['Leer y actualizar solicitudes', 'Cambiar estatus de dictámenes', 'Ver dashboard'] },
-                  { rol: 'CAPTURISTA', color: 'border-teal-200 bg-teal-50/50', badge: 'bg-teal-100 text-teal-800',
+                  { rol: 'CAPTURISTA', color: 'border-teal-200 bg-teal-50/50 dark:border-teal-900/30 dark:bg-teal-900/10', badge: 'bg-teal-100 text-teal-800',
                     permisos: ['Crear solicitudes', 'Leer solicitudes propias', 'Ver dashboard'] },
                 ].map(r => (
                   <div key={r.rol} className={`border ${r.color} rounded-xl p-5`}>
@@ -278,7 +278,7 @@ export default function Configuracion() {
                     </div>
                     <ul className="space-y-1.5 ml-8">
                       {r.permisos.map((p, i) => (
-                        <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
+                        <li key={i} className="text-sm text-gray-600 dark:text-slate-400 flex items-center gap-2">
                           <CheckCircle className="w-3.5 h-3.5 text-green-500" /> {p}
                         </li>
                       ))}
@@ -291,9 +291,9 @@ export default function Configuracion() {
 
           {/* ===== TAB: NOTIFICACIONES ===== */}
           {activeTab === 'notificaciones' && (
-            <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4 animate-in fade-in py-20">
+            <div className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-slate-600 space-y-4 animate-in fade-in py-20">
                <Settings className="w-16 h-16 opacity-20" />
-               <p className="font-medium text-lg text-gray-500">Módulo en construcción</p>
+               <p className="font-medium text-lg text-gray-500 dark:text-slate-500">Módulo en construcción</p>
             </div>
           )}
 
@@ -303,13 +303,13 @@ export default function Configuracion() {
       {/* ===== MODAL: CREAR/EDITAR USUARIO ===== */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-in slide-in-from-bottom-4">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-lg font-bold text-gray-800">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/50">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100">
                 {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>

@@ -20,20 +20,33 @@ public class DashboardController {
     @GetMapping("/stats")
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
-        
-        long total = repository.count();
-        long pendientes = repository.countByEstatusGeneral("En Revisión Técnica") + repository.countByEstatusGeneral("Recibido");
-        long aprobados = repository.countByEstatusGeneral("Autorizado por OM");
-        long concluidos = repository.countByEstatusGeneral("Concluido");
 
-        stats.put("totalSolicitudes", total);
-        stats.put("enTramite", pendientes);
-        stats.put("autorizadasOM", aprobados);
-        stats.put("concluidas", concluidos);
-        
-        // Sum montoTotal is normally done in repository via @Query("SELECT SUM(s.montoSolicitud)...") 
-        // For simplicity returning a mock sum or zero if empty.
-        stats.put("montoTotalAutorizado", 0); // To be implemented later properly.
+        stats.put("totalSolicitudes", repository.count());
+        stats.put("enTramite",
+            repository.countByEstatusGeneral("En Opinión Técnica de Subdirección de Fianzas y Seguros")
+            + repository.countByEstatusGeneral("En proceso de elaboración")
+            + repository.countByEstatusGeneral("En Firma de Dirección General")
+            + repository.countByEstatusGeneral("En autorización de la OM"));
+        stats.put("enAutorizacionOM", repository.countByEstatusGeneral("En autorización de la OM"));
+        stats.put("concluidas", repository.countByEstatusGeneral("Concluido Entregado a dependencia solicitante"));
+
+        stats.put("montoTotal", repository.sumMontoTotal());
+        stats.put("montoConcluido", repository.sumMontoByEstatus("Concluido Entregado a dependencia solicitante"));
+        // Monto en trámite = todo lo que NO está concluido
+        java.math.BigDecimal montoOpinion = repository.sumMontoByEstatus("En Opinión Técnica de Subdirección de Fianzas y Seguros");
+        java.math.BigDecimal montoProceso = repository.sumMontoByEstatus("En proceso de elaboración");
+        java.math.BigDecimal montoFirma = repository.sumMontoByEstatus("En Firma de Dirección General");
+        java.math.BigDecimal montoAutOM = repository.sumMontoByEstatus("En autorización de la OM");
+        stats.put("montoEnTramite", montoOpinion.add(montoProceso).add(montoFirma).add(montoAutOM));
+
+        // Breakdown por tipo
+        Map<String, Long> porTipo = new HashMap<>();
+        porTipo.put("Dictamen Técnico", repository.countByTipoSolicitud("Dictamen Técnico"));
+        porTipo.put("Dictamen de Procedencia", repository.countByTipoSolicitud("Dictamen de Procedencia"));
+        porTipo.put("Opinión Técnica Previa", repository.countByTipoSolicitud("Opinión Técnica Previa"));
+        porTipo.put("Dictamen Previo", repository.countByTipoSolicitud("Dictamen Previo"));
+        porTipo.put("Excepción a Medidas de Austeridad", repository.countByTipoSolicitud("Excepción a Medidas de Austeridad"));
+        stats.put("porTipo", porTipo);
 
         return stats;
     }

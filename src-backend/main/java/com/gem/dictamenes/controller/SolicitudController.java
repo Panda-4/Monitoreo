@@ -4,6 +4,7 @@ import com.gem.dictamenes.model.Solicitud;
 import com.gem.dictamenes.service.SolicitudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,12 +34,12 @@ public class SolicitudController {
     }
 
     @PostMapping
-    public Solicitud create(@RequestBody Solicitud solicitud) {
+    public Solicitud create(@Valid @RequestBody Solicitud solicitud) {
         return solicitudService.save(solicitud);
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<Solicitud> update(@PathVariable Long id, @RequestBody Solicitud solicitud) {
+    public ResponseEntity<Solicitud> update(@PathVariable Long id, @Valid @RequestBody Solicitud solicitud) {
         solicitud.setFolioInterno(id);
         Solicitud updated = solicitudService.save(solicitud);
         return ResponseEntity.ok(updated);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, FileText, Settings, LogOut, ChevronRight, History } from 'lucide-react';
 
-export type ViewType = 'dashboard' | 'dictamenes-list' | 'dictamenes-form' | 'configuracion' | 'auditoria';
+export type ViewType = 'dashboard' | 'dictamenes-list' | 'dictamenes-form' | 'dictamenes-detail' | 'configuracion' | 'auditoria';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -21,7 +21,7 @@ export default function Sidebar({ currentView, onChangeView, onLogout, userRole 
   const navItems = allNavItems.filter(item => item.roles.includes(userRole as any));
 
   const isActive = (id: string) => {
-    if (id === 'dictamenes-list' && currentView === 'dictamenes-form') return true;
+    if (id === 'dictamenes-list' && (currentView === 'dictamenes-form' || currentView === 'dictamenes-detail')) return true;
     return currentView === id;
   };
 

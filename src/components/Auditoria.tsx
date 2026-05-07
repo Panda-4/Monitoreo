@@ -52,34 +52,31 @@ export default function Auditoria() {
     <div className="w-full max-w-7xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800 tracking-tight flex items-center gap-3">
-            <History className="w-8 h-8 text-gem-primary" />
-            Auditoría de Actividad
-          </h2>
-          <p className="text-gray-500 mt-2 font-medium">Registro histórico de cambios y trazabilidad del sistema.</p>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-slate-100 tracking-tight">Auditoría del Sistema</h2>
+          <p className="text-gray-500 dark:text-slate-400 mt-2 font-medium">Registro de todas las operaciones realizadas en la plataforma.</p>
         </div>
       </div>
 
 
 
       {/* Registro de Auditoría (Tabla) */}
-      <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col pt-4">
+      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col pt-4">
         <div className="px-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-          <h3 className="font-bold text-gray-800 text-lg">Registro Detallado</h3>
+          <h3 className="font-bold text-gray-800 dark:text-slate-100 text-lg">Registro Detallado</h3>
           <div className="flex gap-3 text-sm">
             <input 
               type="text" 
               placeholder="Buscar acción o usuario..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary transition-all w-64"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-gem-primary/20 focus:border-gem-primary transition-all text-sm text-gray-800 dark:text-slate-200"
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-             <thead className="bg-gray-50/80 text-xs uppercase text-gray-500 border-y border-gray-200">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-slate-300">
+             <thead className="bg-gray-50/80 dark:bg-slate-900/50 text-xs uppercase text-gray-500 dark:text-slate-400 border-y border-gray-200 dark:border-slate-700">
                 <tr>
                    <th className="px-6 py-4 font-semibold w-52">Fecha / Hora</th>
                    <th className="px-6 py-4 font-semibold">Usuario y Rol</th>
@@ -88,14 +85,14 @@ export default function Auditoria() {
                    <th className="px-6 py-4 font-semibold">Detalle del Cambio</th>
                 </tr>
              </thead>
-             <tbody className="divide-y divide-gray-100 bg-white/50">
+             <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {filteredLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                  <tr key={log.id} className="hover:bg-blue-50/50 dark:hover:bg-slate-700/50 transition-colors">
+                    <td className="px-6 py-4 font-mono text-xs text-gray-500 dark:text-slate-400">
                       {log.fecha}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-gray-800">{log.usuario}</div>
+                      <div className="font-semibold text-gray-800 dark:text-slate-200">{log.usuario}</div>
                       <div className="text-xs text-gem-primary font-medium mt-0.5">{log.rol}</div>
                     </td>
                     <td className="px-6 py-4 text-center">

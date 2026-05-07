@@ -1,16 +1,18 @@
 package com.gem.dictamenes.service.impl;
 
 import com.gem.dictamenes.model.Solicitud;
+import com.gem.dictamenes.model.AuditoriaLog;
+import com.gem.dictamenes.model.Notificacion;
 import com.gem.dictamenes.repository.SolicitudRepository;
+import com.gem.dictamenes.repository.AuditoriaRepository;
+import com.gem.dictamenes.repository.NotificacionRepository;
 import com.gem.dictamenes.service.SolicitudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.gem.dictamenes.model.AuditoriaLog;
-import com.gem.dictamenes.repository.AuditoriaRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
-import java.time.LocalDateTime;
+import org.springframework.security.core.Authentication;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,10 +20,12 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private final SolicitudRepository solicitudRepository;
     private final AuditoriaRepository auditoriaRepository;
-    private final com.gem.dictamenes.repository.NotificacionRepository notificacionRepository;
+    private final NotificacionRepository notificacionRepository;
 
     @Autowired
-    public SolicitudServiceImpl(SolicitudRepository solicitudRepository, AuditoriaRepository auditoriaRepository, com.gem.dictamenes.repository.NotificacionRepository notificacionRepository) {
+    public SolicitudServiceImpl(SolicitudRepository solicitudRepository, 
+                                AuditoriaRepository auditoriaRepository, 
+                                NotificacionRepository notificacionRepository) {
         this.solicitudRepository = solicitudRepository;
         this.auditoriaRepository = auditoriaRepository;
         this.notificacionRepository = notificacionRepository;
@@ -54,16 +58,11 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private void generarNotificacionesNuevaSolicitud(Solicitud solicitud) {
         try {
-            var auth = SecurityContextHolder.getContext().getAuthentication();
-            String rol = auth.getAuthorities().stream()
-                    .findFirst()
-                    .map(a -> a.getAuthority().replace("ROLE_", ""))
-                    .orElse("DESCONOCIDO");
-            
-            String creador = auth.getName();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String creador = auth != null ? auth.getName() : "SISTEMA";
             String msj = "Nueva solicitud #" + solicitud.getFolioInterno() + " (" + solicitud.getTipoSolicitud() + ") registrada por " + creador;
             
-            com.gem.dictamenes.model.Notificacion notifAdmin = new com.gem.dictamenes.model.Notificacion();
+            Notificacion notifAdmin = new Notificacion();
             notifAdmin.setMensaje(msj);
             notifAdmin.setFecha(LocalDateTime.now());
             notifAdmin.setDestinatarioRol("ADMINISTRADOR");
@@ -71,7 +70,7 @@ public class SolicitudServiceImpl implements SolicitudService {
             notifAdmin.setCreadoPor(creador);
             notifAdmin.setLeida(false);
             
-            com.gem.dictamenes.model.Notificacion notifAuth = new com.gem.dictamenes.model.Notificacion();
+            Notificacion notifAuth = new Notificacion();
             notifAuth.setMensaje(msj);
             notifAuth.setFecha(LocalDateTime.now());
             notifAuth.setDestinatarioRol("AUTORIZADOR");
@@ -93,13 +92,15 @@ public class SolicitudServiceImpl implements SolicitudService {
     
     private void registrarAuditoria(String accion, String detalles) {
         try {
-            var auth = SecurityContextHolder.getContext().getAuthentication();
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null) return;
+
             String usuario = auth.getName();
-            // Extraer el rol del usuario autenticado
             String rol = auth.getAuthorities().stream()
                     .findFirst()
                     .map(a -> a.getAuthority().replace("ROLE_", ""))
                     .orElse("DESCONOCIDO");
+
             AuditoriaLog log = new AuditoriaLog();
             log.setUsuario(usuario);
             log.setRol(rol);
