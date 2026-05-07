@@ -6,7 +6,7 @@ services:
     name: dictamenes-frontend
     env: static
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    publishPath: dist
     routes:
       - type: rewrite
         source: /*
