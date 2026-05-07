@@ -4,9 +4,9 @@ services:
   # ---------------------------------------------
   - type: web
     name: dictamenes-frontend
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
@@ -23,7 +23,7 @@ services:
   # ---------------------------------------------
   - type: web
     name: dictamenes-backend
-    env: docker
+    runtime: docker
     rootDir: src-backend
     envVars:
       - key: DB_HOST
