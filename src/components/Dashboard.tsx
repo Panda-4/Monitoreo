@@ -6,6 +6,15 @@ interface DashboardProps {
   userName: string;
 }
 
+// Donut Chart colors per status
+const ESTATUS_COLORS = [
+  { key: 'En Opinión Técnica de Subdirección de Fianzas y Seguros', label: 'Opinión Técnica', color: '#3B82F6', emoji: '🔵' },
+  { key: 'En proceso de elaboración', label: 'En Proceso', color: '#F59E0B', emoji: '🟡' },
+  { key: 'En Firma de Dirección General', label: 'Firma DG', color: '#8B5CF6', emoji: '🟣' },
+  { key: 'En autorización de la OM', label: 'Autorización OM', color: '#10B981', emoji: '🟢' },
+  { key: 'Concluido Entregado a dependencia solicitante', label: 'Concluido', color: '#6B7280', emoji: '⚫' },
+];
+
 export default function Dashboard({ data, userName }: DashboardProps) {
   const total = data.length;
   const enOpinion = data.filter(d => d.estatusGeneral === 'En Opinión Técnica de Subdirección de Fianzas y Seguros').length;
@@ -19,16 +28,25 @@ export default function Dashboard({ data, userName }: DashboardProps) {
   const montoAutorizado = data.filter(d => d.estatusGeneral === 'Concluido Entregado a dependencia solicitante').reduce((acc, c) => acc + (c.montoSolicitud || 0), 0);
   const montoEnTramite = data.filter(d => d.estatusGeneral !== 'Concluido Entregado a dependencia solicitante').reduce((acc, c) => acc + (c.montoSolicitud || 0), 0);
 
-  // Real monthly data from records
-  const currentYear = new Date().getFullYear();
-  const monthLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const monthlyData = monthLabels.map((_, i) =>
-    data.filter(d => {
-      if (!d.fechaRecepcionDGRMOM) return false;
-      const dt = new Date(d.fechaRecepcionDGRMOM + 'T00:00:00');
-      return dt.getFullYear() === currentYear && dt.getMonth() === i;
-    }).length
-  );
+  // Donut chart data
+  const donutData = ESTATUS_COLORS.map(e => ({
+    ...e,
+    value: data.filter(d => d.estatusGeneral === e.key).length,
+  })).filter(d => d.value > 0);
+
+  const donutTotal = donutData.reduce((acc, d) => acc + d.value, 0);
+  const RADIUS = 70;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  // Calculate segments
+  let cumulativeOffset = 0;
+  const segments = donutData.map(d => {
+    const percentage = donutTotal > 0 ? d.value / donutTotal : 0;
+    const arcLength = percentage * CIRCUMFERENCE;
+    const segment = { ...d, percentage, arcLength, offset: cumulativeOffset };
+    cumulativeOffset += arcLength;
+    return segment;
+  });
 
   // Type breakdown
   const tipos = [
@@ -45,24 +63,6 @@ export default function Dashboard({ data, userName }: DashboardProps) {
     { label: 'En Autorización OM', value: enAutorizacion, icon: CheckCircle, accent: 'from-emerald-500 to-teal-600', iconBg: 'bg-emerald-50 dark:bg-emerald-900/40', iconColor: 'text-emerald-600 dark:text-emerald-400' },
     { label: 'Concluidas', value: concluidos, icon: TrendingUp, accent: 'from-violet-500 to-purple-600', iconBg: 'bg-violet-50 dark:bg-violet-900/40', iconColor: 'text-violet-600 dark:text-violet-400' },
   ];
-
-  // Logic for dynamic chart range
-  const currentMonth = new Date().getMonth();
-  const firstMonthWithData = monthlyData.findIndex(v => v > 0);
-  const startMonth = firstMonthWithData === -1 ? Math.max(0, currentMonth - 3) : firstMonthWithData;
-  
-  let lastIdx = -1;
-  for (let i = monthlyData.length - 1; i >= 0; i--) {
-    if (monthlyData[i] > 0) {
-      lastIdx = i;
-      break;
-    }
-  }
-  const endMonth = Math.max(currentMonth, lastIdx);
-  
-  const visibleMonths = monthlyData.slice(startMonth, endMonth + 1);
-  const visibleLabels = monthLabels.slice(startMonth, endMonth + 1);
-  const maxVisible = Math.max(...visibleMonths, 1);
 
   return (
     <div className="w-full max-w-7xl mx-auto py-8 space-y-8">
@@ -90,67 +90,89 @@ export default function Dashboard({ data, userName }: DashboardProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Monthly Chart */}
+          {/* ===== DONUT CHART — Distribución por Estatus ===== */}
           <div className="lg:col-span-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-6 relative overflow-hidden">
             <div className="flex items-center justify-between mb-6 relative z-10">
               <div>
-                <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100">Actividad de Solicitudes</h3>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100">Solicitudes por Estatus</h3>
                 <p className="text-xs text-gray-500 dark:text-slate-400">
-                  Rango: {visibleLabels[0] || '—'} – {visibleLabels[visibleLabels.length - 1] || '—'} {currentYear}
+                  Distribución proporcional del pipeline de trámites
                 </p>
               </div>
               <span className="text-xs font-bold bg-gem-primary/10 text-gem-primary px-3 py-1.5 rounded-lg border border-gem-primary/20">
-                {total} acumuladas
+                {total} total
               </span>
             </div>
 
-            {/* Chart Area */}
-            <div className="relative" style={{ height: '220px' }}>
-              {/* Grid Lines */}
-              <div className="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none pl-6">
-                {[0, 1, 2, 3].map((_, i) => (
-                  <div key={i} className="w-full border-t border-gray-100 dark:border-slate-700/50 relative">
-                    <span className="absolute -top-2.5 -left-6 text-[9px] text-gray-300 dark:text-slate-600 font-mono tabular-nums">
-                      {Math.round((maxVisible / 3) * (3 - i))}
-                    </span>
-                  </div>
-                ))}
+            {total === 0 ? (
+              <div className="flex items-center justify-center py-12 text-gray-400 dark:text-slate-500">
+                <div className="text-center">
+                  <Layers className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                  <p className="font-medium">Sin datos para mostrar</p>
+                  <p className="text-xs mt-1">Registre solicitudes para ver la gráfica</p>
+                </div>
               </div>
+            ) : (
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Legend */}
+                <div className="flex-1 space-y-3 order-2 md:order-1">
+                  {ESTATUS_COLORS.map((e) => {
+                    const count = data.filter(d => d.estatusGeneral === e.key).length;
+                    const pct = donutTotal > 0 ? ((count / donutTotal) * 100).toFixed(0) : '0';
+                    return (
+                      <div key={e.key} className="flex items-center gap-3 group cursor-default">
+                        <div
+                          className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm ring-2 ring-white dark:ring-slate-800"
+                          style={{ backgroundColor: e.color }}
+                        />
+                        <div className="flex-1 flex items-center justify-between min-w-0">
+                          <span className="text-sm font-medium text-gray-700 dark:text-slate-300 truncate">{e.label}</span>
+                          <div className="flex items-center gap-2 ml-2 shrink-0">
+                            <span className="text-sm font-bold text-gray-800 dark:text-slate-100">{count}</span>
+                            <span className="text-xs text-gray-400 dark:text-slate-500 font-mono w-8 text-right">{pct}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {/* Bars */}
-              <div className="absolute inset-x-0 top-0 bottom-0 flex items-end justify-around gap-3 pl-6 pr-2">
-                {visibleMonths.map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center group relative" style={{ height: '100%' }}>
-                    {/* Tooltip */}
-                    {val > 0 && (
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-slate-700 text-white text-[10px] font-bold px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 shadow-lg">
-                        {val} solicitud{val !== 1 ? 'es' : ''}
-                      </div>
-                    )}
-                    
-                    {/* Bar Column */}
-                    <div className="flex-1 w-full flex flex-col justify-end items-center">
-                      {val > 0 && (
-                        <span className="text-[11px] font-extrabold text-gem-primary dark:text-gem-primary-light mb-1">
-                          {val}
-                        </span>
-                      )}
-                      <div
-                        className="w-full max-w-[60px] bg-linear-to-t from-gem-primary to-gem-primary-light rounded-t-lg transition-all duration-1000 ease-out shadow-sm group-hover:brightness-110 group-hover:shadow-lg group-hover:shadow-gem-primary/30 relative"
-                        style={{ height: `${(val / maxVisible) * 90}%`, minHeight: val > 0 ? '6px' : '2px' }}
-                      >
-                        <div className="absolute inset-0 bg-linear-to-r from-white/15 to-transparent rounded-t-lg"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Month Label */}
-                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400 mt-1.5 uppercase tracking-wider leading-none h-4 flex items-center">
-                      {visibleLabels[i]}
-                    </span>
+                {/* SVG Donut */}
+                <div className="relative order-1 md:order-2 shrink-0" style={{ width: 200, height: 200 }}>
+                  <svg viewBox="0 0 200 200" className="w-full h-full transform -rotate-90">
+                    {/* Background ring */}
+                    <circle
+                      cx="100" cy="100" r={RADIUS}
+                      fill="none"
+                      stroke="currentColor"
+                      className="text-gray-100 dark:text-slate-700"
+                      strokeWidth="32"
+                    />
+                    {/* Data segments */}
+                    {segments.map((seg, i) => (
+                      <circle
+                        key={i}
+                        cx="100" cy="100" r={RADIUS}
+                        fill="none"
+                        stroke={seg.color}
+                        strokeWidth="32"
+                        strokeDasharray={`${seg.arcLength} ${CIRCUMFERENCE - seg.arcLength}`}
+                        strokeDashoffset={-seg.offset}
+                        className="transition-all duration-1000 ease-out"
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+                        }}
+                      />
+                    ))}
+                  </svg>
+                  {/* Center label */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-extrabold text-gray-800 dark:text-slate-100">{total}</span>
+                    <span className="text-[10px] font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Total</span>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Financial Summary */}

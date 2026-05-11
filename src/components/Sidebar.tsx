@@ -26,14 +26,14 @@ export default function Sidebar({ currentView, onChangeView, onLogout, userRole 
   };
 
   return (
-    <div className="w-64 flex-shrink-0 bg-gem-primary text-white flex flex-col h-screen sticky top-0 border-r border-gem-primary-dark shadow-[4px_0_24px_rgba(149,31,69,0.15)] relative z-20 print:hidden">
+    <div className="w-64 flex-shrink-0 bg-gradient-to-b from-gem-primary to-[#6b1535] text-white flex flex-col h-screen sticky top-0 border-r border-gem-primary-dark shadow-[4px_0_24px_rgba(149,31,69,0.15)] relative z-20 print:hidden">
       <div className="p-6 flex items-center gap-3 border-b border-white/10">
         <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20 shadow-inner">
           <span className="text-white font-bold text-2xl tracking-tighter">G</span>
         </div>
         <div className="flex flex-col">
-          <span className="font-bold text-sm tracking-widest text-gem-secondary uppercase">EdoMéx</span>
-          <span className="text-xs text-white/70 font-medium">Dictámenes Admin</span>
+          <span className="font-bold text-sm tracking-widest text-gem-secondary uppercase">DGRM</span>
+          <span className="text-xs text-white/70 font-medium">Sistema de Dictámenes</span>
         </div>
       </div>
 

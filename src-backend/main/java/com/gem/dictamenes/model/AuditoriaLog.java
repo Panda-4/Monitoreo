@@ -19,9 +19,12 @@ public class AuditoriaLog {
     private String entidad;
     private String detalle;
 
+    @Column(columnDefinition = "TEXT")
+    private String cambiosDetalle;
+
     public AuditoriaLog() {}
 
-    public AuditoriaLog(Long id, LocalDateTime fecha, String rol, String usuario, String accion, String entidad, String detalle) {
+    public AuditoriaLog(Long id, LocalDateTime fecha, String rol, String usuario, String accion, String entidad, String detalle, String cambiosDetalle) {
         this.id = id;
         this.fecha = fecha;
         this.rol = rol;
@@ -29,6 +32,7 @@ public class AuditoriaLog {
         this.accion = accion;
         this.entidad = entidad;
         this.detalle = detalle;
+        this.cambiosDetalle = cambiosDetalle;
     }
 
     // Getters and Setters
@@ -53,17 +57,20 @@ public class AuditoriaLog {
     public String getDetalle() { return detalle; }
     public void setDetalle(String detalle) { this.detalle = detalle; }
 
+    public String getCambiosDetalle() { return cambiosDetalle; }
+    public void setCambiosDetalle(String cambiosDetalle) { this.cambiosDetalle = cambiosDetalle; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AuditoriaLog that = (AuditoriaLog) o;
-        return Objects.equals(id, that.id) && Objects.equals(fecha, that.fecha) && Objects.equals(rol, that.rol) && Objects.equals(usuario, that.usuario) && Objects.equals(accion, that.accion) && Objects.equals(entidad, that.entidad) && Objects.equals(detalle, that.detalle);
+        return Objects.equals(id, that.id) && Objects.equals(fecha, that.fecha) && Objects.equals(rol, that.rol) && Objects.equals(usuario, that.usuario) && Objects.equals(accion, that.accion) && Objects.equals(entidad, that.entidad) && Objects.equals(detalle, that.detalle) && Objects.equals(cambiosDetalle, that.cambiosDetalle);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, fecha, rol, usuario, accion, entidad, detalle);
+        return Objects.hash(id, fecha, rol, usuario, accion, entidad, detalle, cambiosDetalle);
     }
 
     @Override
@@ -76,6 +83,7 @@ public class AuditoriaLog {
                 ", accion='" + accion + '\'' +
                 ", entidad='" + entidad + '\'' +
                 ", detalle='" + detalle + '\'' +
+                ", cambiosDetalle='" + cambiosDetalle + '\'' +
                 '}';
     }
 }

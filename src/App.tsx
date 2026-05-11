@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar, { ViewType } from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import DictamenList from './components/DictamenList';
@@ -7,6 +7,8 @@ import DictamenDetalle from './components/DictamenDetalle';
 import Configuracion from './components/Configuracion';
 import Auditoria from './components/Auditoria';
 import Login from './components/Login';
+import ConfirmModal, { ConfirmModalItem } from './components/ConfirmModal';
+import ToastContainer, { ToastItem } from './components/Toast';
 import { SolicitudModel } from './types';
 import { Moon, Sun, Bell } from 'lucide-react';
 import { login as authLogin, logout as authLogout, getUser, isAuthenticated, authFetch, AuthUser, API_BASE, setOnSessionExpired } from './services/authService';
@@ -22,10 +24,29 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Estados para notificaciones
+  // Estados para notificaciones del header
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.length;
+
+  // ===== CONFIRM MODAL STATES =====
+  const [pendingSave, setPendingSave] = useState<SolicitudModel | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  // ===== TOAST STATES =====
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type }]);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   const fetchNotifications = async () => {
     if (!loggedIn) return;
@@ -125,29 +146,41 @@ export default function App() {
     setCurrentView('dictamenes-form');
   };
 
-  const handleSave = async (solicitud: SolicitudModel) => {
+  // ===== SAVE FLOW: Form → Confirm Modal → Execute =====
+  const handleSave = (solicitud: SolicitudModel) => {
     setSaveError('');
+    setPendingSave(solicitud);
+    setShowSaveConfirm(true);
+  };
+
+  const executeSave = async () => {
+    if (!pendingSave) return;
+    setConfirmLoading(true);
     try {
       let res: Response;
-      if (solicitud.folioInterno) {
-        res = await authFetch(`${API_BASE}/api/solicitudes/${solicitud.folioInterno}`, {
+      if (pendingSave.folioInterno) {
+        res = await authFetch(`${API_BASE}/api/solicitudes/${pendingSave.folioInterno}`, {
           method: 'PUT',
-          body: JSON.stringify(solicitud)
+          body: JSON.stringify(pendingSave)
         });
       } else {
         res = await authFetch(`${API_BASE}/api/solicitudes`, {
           method: 'POST',
-          body: JSON.stringify(solicitud)
+          body: JSON.stringify(pendingSave)
         });
       }
 
       if (res.ok) {
         const saved = await res.json();
-        if (solicitud.folioInterno) {
+        if (pendingSave.folioInterno) {
           setData(data.map(d => d.folioInterno === saved.folioInterno ? saved : d));
+          addToast(`Solicitud #${saved.folioInterno} actualizada exitosamente`, 'success');
         } else {
           setData([saved, ...data]);
+          addToast(`Nueva solicitud #${saved.folioInterno} registrada exitosamente`, 'success');
         }
+        setShowSaveConfirm(false);
+        setPendingSave(null);
         setCurrentView('dictamenes-list');
       } else {
         const err = await res.json().catch(() => ({ error: 'Error desconocido del servidor' }));
@@ -155,33 +188,82 @@ export default function App() {
           ? err.details.join('\n')
           : err.error || err.message || 'Error al guardar la solicitud';
         setSaveError(message);
+        setShowSaveConfirm(false);
+        setPendingSave(null);
+        addToast(message, 'error');
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }
     } catch (error) {
       console.error('Error saving data:', error);
       setSaveError('Error de conexión al intentar guardar.');
+      setShowSaveConfirm(false);
+      setPendingSave(null);
+      addToast('Error de conexión al intentar guardar', 'error');
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
-  const handleDelete = async (folioInterno: number) => {
-    if (!confirm('¿Está seguro de que desea eliminar esta solicitud?')) return;
+  // ===== DELETE FLOW: List → Confirm Modal → Execute =====
+  const handleDelete = (folioInterno: number) => {
+    setPendingDeleteId(folioInterno);
+    setShowDeleteConfirm(true);
+  };
+
+  const executeDelete = async () => {
+    if (pendingDeleteId === null) return;
+    setConfirmLoading(true);
     try {
-      const res = await authFetch(`${API_BASE}/api/solicitudes/${folioInterno}`, {
+      const res = await authFetch(`${API_BASE}/api/solicitudes/${pendingDeleteId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
-        setData(data.filter(d => d.folioInterno !== folioInterno));
+        setData(data.filter(d => d.folioInterno !== pendingDeleteId));
+        addToast(`Solicitud #${pendingDeleteId} eliminada correctamente`, 'success');
       } else {
         if (res.status === 403) {
-          alert('No tiene permisos para eliminar este registro. Solo los Administradores pueden realizar esta acción.');
+          addToast('No tiene permisos para eliminar. Solo Administradores pueden realizar esta acción.', 'error');
         } else {
-          alert('Error al intentar eliminar el registro.');
+          addToast('Error al intentar eliminar el registro.', 'error');
         }
       }
     } catch (error) {
       console.error('Error deleting:', error);
-      alert('Error de conexión al intentar eliminar.');
+      addToast('Error de conexión al intentar eliminar.', 'error');
+    } finally {
+      setConfirmLoading(false);
+      setShowDeleteConfirm(false);
+      setPendingDeleteId(null);
     }
+  };
+
+  // Helper: build data items for save confirm modal
+  const buildSaveItems = (): ConfirmModalItem[] => {
+    if (!pendingSave) return [];
+    const items: ConfirmModalItem[] = [];
+    if (pendingSave.folioInterno) items.push({ label: 'Folio', value: `#${pendingSave.folioInterno}` });
+    if (pendingSave.tipoSolicitud) items.push({ label: 'Tipo', value: pendingSave.tipoSolicitud });
+    if (pendingSave.dependenciaOPD) items.push({ label: 'Dependencia', value: pendingSave.dependenciaOPD });
+    if (pendingSave.montoSolicitud) items.push({ label: 'Monto', value: `$${Number(pendingSave.montoSolicitud).toLocaleString('es-MX', { minimumFractionDigits: 2 })}` });
+    if (pendingSave.estatusGeneral) items.push({ label: 'Estatus', value: pendingSave.estatusGeneral });
+    if (pendingSave.numeroOficioSolicitud) items.push({ label: 'Nro. Oficio', value: pendingSave.numeroOficioSolicitud });
+    return items;
+  };
+
+  // Helper: build data items for delete confirm modal
+  const buildDeleteItems = (): ConfirmModalItem[] => {
+    if (pendingDeleteId === null) return [];
+    const record = data.find(d => d.folioInterno === pendingDeleteId);
+    if (!record) return [{ label: 'Folio', value: `#${pendingDeleteId}` }];
+    const items: ConfirmModalItem[] = [
+      { label: 'Folio', value: `#${record.folioInterno}` },
+    ];
+    if (record.tipoSolicitud) items.push({ label: 'Tipo', value: record.tipoSolicitud });
+    if (record.dependenciaOPD) items.push({ label: 'Dependencia', value: record.dependenciaOPD });
+    if (record.montoSolicitud) items.push({ label: 'Monto', value: `$${Number(record.montoSolicitud).toLocaleString('es-MX', { minimumFractionDigits: 2 })}` });
+    if (record.numeroOficioSolicitud) items.push({ label: 'Nro. Oficio', value: record.numeroOficioSolicitud });
+    if (record.estatusGeneral) items.push({ label: 'Estatus', value: record.estatusGeneral });
+    return items;
   };
 
   // If not authenticated, show Login
@@ -200,9 +282,29 @@ export default function App() {
         userRole={userRole}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen relative overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-h-screen relative overflow-x-hidden bg-gradient-to-br from-slate-50 via-rose-50/30 to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+        {/* Institutional Banner */}
+        <div className="bg-gem-primary text-white px-8 py-2 flex items-center gap-3 print:hidden shadow-sm z-50 sticky top-0">
+          <div className="w-7 h-7 bg-white/15 rounded-lg flex items-center justify-center border border-white/20">
+            <span className="text-white font-bold text-sm">G</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold tracking-wider text-white/70 uppercase">Gobierno del Estado de México</span>
+            <span className="text-white/40">|</span>
+            <span className="text-[12px] font-bold tracking-wide text-gem-secondary uppercase">Oficialía Mayor</span>
+          </div>
+        </div>
+
         {/* Top Header */}
-        <header className={`backdrop-blur-md border-b sticky top-0 z-40 h-16 flex items-center justify-end px-8 shadow-sm print:hidden ${isDarkMode ? 'bg-slate-900/80 border-slate-700' : 'bg-white/80 border-gray-200'}`}>
+        <header className={`backdrop-blur-md border-b sticky top-[36px] z-40 h-14 flex items-center justify-between px-8 shadow-sm print:hidden ${isDarkMode ? 'bg-slate-900/80 border-slate-700' : 'bg-white/80 border-gray-200'}`}>
+           <div className={`text-sm font-semibold ${isDarkMode ? 'text-slate-300' : 'text-gray-500'}`}>
+             {currentView === 'dashboard' && 'Dashboard'}
+             {currentView === 'dictamenes-list' && 'Gestión de Dictámenes'}
+             {currentView === 'dictamenes-form' && (editingData ? 'Editar Solicitud' : 'Nueva Solicitud')}
+             {currentView === 'dictamenes-detail' && 'Detalle de Solicitud'}
+             {currentView === 'configuracion' && 'Configuración'}
+             {currentView === 'auditoria' && 'Auditoría'}
+           </div>
            <div className="flex items-center gap-6 text-sm font-medium">
              <button 
                onClick={() => setIsDarkMode(!isDarkMode)} 
@@ -324,6 +426,34 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* ===== CONFIRM MODALS ===== */}
+      <ConfirmModal
+        isOpen={showSaveConfirm}
+        onClose={() => { setShowSaveConfirm(false); setPendingSave(null); }}
+        onConfirm={executeSave}
+        title={pendingSave?.folioInterno ? 'Confirmar Actualización' : 'Confirmar Nuevo Registro'}
+        message={pendingSave?.folioInterno 
+          ? 'Se actualizarán los siguientes datos de la solicitud:'
+          : 'Se registrará una nueva solicitud con los siguientes datos:'}
+        variant={pendingSave?.folioInterno ? 'edit' : 'save'}
+        items={buildSaveItems()}
+        loading={confirmLoading}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => { setShowDeleteConfirm(false); setPendingDeleteId(null); }}
+        onConfirm={executeDelete}
+        title="Confirmar Eliminación"
+        message="Esta acción es irreversible. Se eliminará permanentemente el siguiente registro:"
+        variant="delete"
+        items={buildDeleteItems()}
+        loading={confirmLoading}
+      />
+
+      {/* ===== TOAST NOTIFICATIONS ===== */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

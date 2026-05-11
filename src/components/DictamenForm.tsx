@@ -245,7 +245,7 @@ export default function DictamenForm({ onCancel, onSave, initialData, errorMessa
               </div>
 
               <div className="space-y-1 relative">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Fecha recepción Coord. Jurídica</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-slate-300">Fecha de recepción en Dptto. de Dictaminación  /Coord.Jurídica</label>
                 <div className="flex gap-4 items-center mt-1">
                   <input 
                     type="date" 
@@ -413,11 +413,11 @@ export default function DictamenForm({ onCancel, onSave, initialData, errorMessa
                     {formData.procedente === true && (
                       <div className="space-y-4 mt-4 pt-4 border-t border-gray-100 animate-in slide-in-from-top-2">
                         <div className="space-y-1">
-                          <label className="block text-xs font-semibold text-gray-600">Fecha envío a autorización OM</label>
+                          <label className="block text-xs font-semibold text-gray-600">Fecha de envío para autorización de la OM</label>
                           <input type="date" name="fechaEnvioAutorizacionOM" value={formData.fechaEnvioAutorizacionOM || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-semibold text-gray-600">Fecha emisión de autorización</label>
+                          <label className="block text-xs font-semibold text-gray-600">Fecha de emisión de autorización</label>
                           <input type="date" name="fechaEmisionAutorizacion" value={formData.fechaEmisionAutorizacion || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                         <div className="space-y-1">
@@ -425,7 +425,7 @@ export default function DictamenForm({ onCancel, onSave, initialData, errorMessa
                           <input type="date" name="fechaEnvioFirmaDG" value={formData.fechaEnvioFirmaDG || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-semibold text-gray-600">Fecha envío a Dependencia</label>
+                          <label className="block text-xs font-semibold text-gray-600">Fecha de envío a la Dependencia/ OPD</label>
                           <input type="date" name="fechaEnvioDependencia" value={formData.fechaEnvioDependencia || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                       </div>
@@ -438,7 +438,7 @@ export default function DictamenForm({ onCancel, onSave, initialData, errorMessa
                           <input type="date" name="fechaEnvioRespuestaFirmaDG" value={formData.fechaEnvioRespuestaFirmaDG || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                         <div className="space-y-1">
-                          <label className="block text-xs font-semibold text-gray-600">Fecha envío respuesta Dependencia</label>
+                          <label className="block text-xs font-semibold text-gray-600">Fecha de envío respuesta a la Dependencia/ OPD</label>
                           <input type="date" name="fechaEnvioRespuestaDependencia" value={formData.fechaEnvioRespuestaDependencia || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5" />
                         </div>
                       </div>
@@ -465,7 +465,7 @@ export default function DictamenForm({ onCancel, onSave, initialData, errorMessa
                       </div>
 
                       <div className="bg-white/60 p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                         <label className="block text-sm font-bold text-gray-800">¿Excepción a Medidas de Austeridad?</label>
+                         <label className="block text-sm font-bold text-gray-800">¿Cuenta con Excepción a Medidas de Austeridad?</label>
                          <select name="cuentaExcepcionAusteridad" value={formData.cuentaExcepcionAusteridad || ''} onChange={handleChange} className="w-full bg-white border border-gray-200 text-gray-800 text-sm rounded-lg p-2.5">
                             <option value="">Seleccione...</option>
                             <option value="Sí">Sí</option>
