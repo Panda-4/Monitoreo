@@ -18,6 +18,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [editingData, setEditingData] = useState<SolicitudModel | null>(null);
   const [detailData, setDetailData] = useState<SolicitudModel | null>(null);
+  const [detailBackView, setDetailBackView] = useState<ViewType>('dictamenes-list');
   const [data, setData] = useState<SolicitudModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getUser());
@@ -386,14 +387,28 @@ export default function App() {
 
           {(!isLoading || currentView === 'configuracion' || currentView === 'auditoria') && (
             <>
-              {currentView === 'dashboard' && <Dashboard data={data} userName={currentUser?.nombreCompleto || 'Usuario'} />}
+              {currentView === 'dashboard' && (
+                <Dashboard 
+                  data={data} 
+                  userName={currentUser?.nombreCompleto || 'Usuario'} 
+                  onViewDetail={(solicitud) => {
+                    setDetailData(solicitud);
+                    setDetailBackView('dashboard');
+                    setCurrentView('dictamenes-detail');
+                  }}
+                />
+              )}
               
               {currentView === 'dictamenes-list' && (
                 <DictamenList 
                   data={data} 
                   onCreate={handleCreate} 
                   onEdit={handleEdit}
-                  onViewDetail={(solicitud) => { setDetailData(solicitud); setCurrentView('dictamenes-detail'); }}
+                  onViewDetail={(solicitud) => { 
+                    setDetailData(solicitud); 
+                    setDetailBackView('dictamenes-list');
+                    setCurrentView('dictamenes-detail'); 
+                  }}
                   onDelete={handleDelete}
                   userRole={userRole}
                 />
@@ -411,7 +426,7 @@ export default function App() {
               {currentView === 'dictamenes-detail' && detailData && (
                 <DictamenDetalle
                   solicitud={detailData}
-                  onBack={() => setCurrentView('dictamenes-list')}
+                  onBack={() => setCurrentView(detailBackView)}
                   onEdit={(solicitud) => { setDetailData(null); handleEdit(solicitud); }}
                   userRole={userRole}
                 />
